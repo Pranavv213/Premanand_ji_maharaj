@@ -6,7 +6,7 @@
   <title>Shri Premanand Ji Maharaj Chat AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-gradient: linear-gradient(135deg, #0f0715 0%, #1a0b2e 50%, #2d0b1e 100%);
@@ -36,11 +36,11 @@
     body {
       background: var(--bg-gradient);
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
       min-height: 100vh;
       color: var(--text-main);
-      overflow: hidden;
+      overflow-x: hidden;
       position: relative;
     }
 
@@ -72,10 +72,51 @@
       opacity: 0.2;
     }
 
-    .chat-container {
+    /* Top Navigation Bar */
+    .navbar {
       width: 100%;
       max-width: 680px;
-      height: 90vh;
+      margin-top: 15px;
+      background: rgba(20, 8, 25, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px;
+      z-index: 10;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--gold-primary);
+      background: rgba(255, 215, 0, 0.05);
+    }
+
+    .nav-btn.active {
+      background: var(--gold-gradient);
+      color: #0f0715;
+      box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3);
+    }
+
+    /* Main Container Structure */
+    .app-container {
+      width: 100%;
+      max-width: 680px;
+      height: 82vh;
+      margin: 15px 0;
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
@@ -89,6 +130,19 @@
       position: relative;
     }
 
+    .tab-content {
+      display: none;
+      flex: 1;
+      height: 100%;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Tab 1: AI Chat Styling */
     .chat-header {
       background: rgba(20, 8, 25, 0.7);
       padding: 18px 24px;
@@ -211,7 +265,6 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     }
 
-    /* Animated Loading Component */
     .loading-row {
       align-self: flex-start;
       display: flex;
@@ -327,42 +380,508 @@
       box-shadow: none;
       transform: none;
     }
+
+    /* Tab 2: Naam Jap Styling */
+    .jap-container {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      height: 100%;
+      text-align: center;
+    }
+
+    .counters-wrapper {
+      display: flex;
+      gap: 35px;
+      background: rgba(15, 7, 21, 0.7);
+      padding: 10px 32px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .counter-box h3 {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .counter-box p {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+    }
+
+    .mala-wrapper {
+      position: relative;
+      width: 380px;
+      height: 380px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mala-svg {
+      width: 100%;
+      height: 100%;
+      transform-origin: 200px 200px;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 0 16px rgba(255, 153, 51, 0.35));
+    }
+
+    .mala-wrapper:active .mala-svg {
+      scale: 0.98;
+    }
+
+    .bead-pointer {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-top: 16px solid var(--radha-pink);
+      filter: drop-shadow(0 2px 6px var(--radha-pink));
+      z-index: 5;
+    }
+
+    .hint-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .reset-btn {
+      background: transparent;
+      border: 1px solid var(--text-muted);
+      color: var(--text-muted);
+      padding: 6px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s ease;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--radha-pink);
+      color: var(--radha-pink);
+    }
+
+    /* Tab 3: Prem Vani Styling */
+    .vanis-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100%;
+      padding: 30px 20px;
+      gap: 24px;
+      overflow-y: auto;
+    }
+
+    .vanis-header {
+      text-align: center;
+    }
+
+    .vanis-header h3 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .vanis-header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .jaap-grid {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Radha Jaap Player Card */
+    .jaap-card {
+      background: rgba(20, 8, 25, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      transition: border-color 0.3s ease;
+    }
+
+    .jaap-card:hover {
+      border-color: var(--gold-primary);
+    }
+
+    .jaap-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .jaap-icon-wrapper {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--user-msg-bg);
+      border: 1.5px solid var(--gold-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-primary);
+      font-size: 1.2rem;
+      box-shadow: 0 0 10px rgba(255, 42, 133, 0.3);
+    }
+
+    .jaap-details h4 {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .jaap-details p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .play-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gold-gradient);
+      border: none;
+      color: #0f0715;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(245, 166, 35, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding-left: 3px; /* visual center alignment for play icon */
+    }
+
+    .play-btn.playing {
+      padding-left: 0;
+      background: var(--radha-pink);
+      color: #ffffff;
+      box-shadow: 0 0 15px var(--radha-pink);
+    }
+
+    .play-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .coming-soon-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(255, 215, 0, 0.2);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Wave animation when playing */
+    .playing-waves {
+      display: none;
+      gap: 3px;
+      align-items: flex-end;
+      height: 16px;
+      margin-top: 4px;
+    }
+
+    .playing-waves.active {
+      display: flex;
+    }
+
+    .playing-waves span {
+      width: 3px;
+      background: var(--gold-primary);
+      animation: wave 1s infinite ease-in-out;
+      border-radius: 2px;
+    }
+
+    .playing-waves span:nth-child(1) { height: 60%; animation-delay: 0s; }
+    .playing-waves span:nth-child(2) { height: 100%; animation-delay: 0.2s; }
+    .playing-waves span:nth-child(3) { height: 40%; animation-delay: 0.4s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1); }
+    }
+
+    /* Bottom Disclaimer */
+    .disclaimer {
+      width: 100%;
+      max-width: 680px;
+      text-align: center;
+      padding: 8px 16px 16px 16px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
 
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="header-avatar-container">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWCNZpuQTOcutmN-KQ5-bPFGujKHGQmosWX3izwLycdggSLeFtWIrWj9o&s=10" alt="Avatar" class="header-avatar" />
-        <span class="ai-badge-dot"></span>
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <button class="nav-btn active" onclick="switchTab('chatTab', this)">Home (AI)</button>
+    <button class="nav-btn" onclick="switchTab('japTab', this)">Naam Jap</button>
+    <button class="nav-btn" onclick="switchTab('vaniTab', this)">Prem Vani</button>
+  </nav>
+
+  <!-- Main Content Container -->
+  <div class="app-container">
+    
+    <!-- Tab 1: AI Chat -->
+    <div id="chatTab" class="tab-content active">
+      <div class="chat-header">
+        <div class="header-avatar-container">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWCNZpuQTOcutmN-KQ5-bPFGujKHGQmosWX3izwLycdggSLeFtWIrWj9o&s=10" alt="Avatar" class="header-avatar" />
+          <span class="ai-badge-dot"></span>
+        </div>
+        <div class="header-info">
+          <h2>प्रेम मार्ग AI</h2>
+          <p>मार्गदर्शन: महाराज जी का भाव</p>
+        </div>
       </div>
-      <div class="header-info">
-        <h2>प्रेम मार्ग AI</h2>
-        <p>मार्गदर्शन: महाराज जी का भाव</p>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="message-row assistant">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWCNZpuQTOcutmN-KQ5-bPFGujKHGQmosWX3izwLycdggSLeFtWIrWj9o&s=10" class="bot-avatar" alt="Bot Avatar" />
+          <div class="message">राधे-राधे, Ask your queries to Shri Premand Ji Maharaj!</div>
+        </div>
+      </div>
+
+      <form class="chat-input-area" id="chatForm">
+        <input 
+          type="text" 
+          id="userInput" 
+          placeholder="प्रश्न पूछें..." 
+          autocomplete="off"
+          required
+        />
+        <button type="submit" id="sendBtn">Send</button>
+      </form>
+    </div>
+
+    <!-- Tab 2: Naam Jap -->
+    <div id="japTab" class="tab-content">
+      <div class="jap-container">
+        <div class="counters-wrapper">
+          <div class="counter-box">
+            <h3>Beads (मनके)</h3>
+            <p id="beadCount">0</p>
+          </div>
+          <div class="counter-box">
+            <h3>Mala (माला)</h3>
+            <p id="malaCount">0</p>
+          </div>
+        </div>
+
+        <div class="mala-wrapper" id="malaBtn" onclick="incrementJap()">
+          <div class="bead-pointer"></div>
+          
+          <!-- High Definition 108 Bead SVG Mala -->
+          <svg class="mala-svg" id="malaSvg" viewBox="0 0 400 400">
+            <defs>
+              <radialGradient id="sumeruGrad" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stop-color="#fff176" />
+                <stop offset="40%" stop-color="#ffd700" />
+                <stop offset="85%" stop-color="#e65c00" />
+                <stop offset="100%" stop-color="#5c0000" />
+              </radialGradient>
+              <radialGradient id="rudrakshaGrad" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#ffb74d" />
+                <stop offset="45%" stop-color="#d35400" />
+                <stop offset="85%" stop-color="#7e2a0c" />
+                <stop offset="100%" stop-color="#3e1100" />
+              </radialGradient>
+            </defs>
+
+            <!-- Base String Circle -->
+            <circle cx="200" cy="200" r="162" fill="none" stroke="#ff9933" stroke-width="2.5" opacity="0.6" stroke-dasharray="4,3" />
+            
+            <!-- Dynamic Beads -->
+            <g id="beadsGroup"></g>
+
+            <!-- Sumeru Head Bead & Tassel -->
+            <g transform="translate(200, 38)">
+              <circle cx="0" cy="0" r="11" fill="url(#sumeruGrad)" stroke="#ffe066" stroke-width="2" />
+              <path d="M -4 10 L 0 24 L 4 10 Z" fill="#ff9933" />
+              <path d="M -7 24 L 0 40 L 7 24 Z" fill="#ff2a85" opacity="0.9" />
+              <circle cx="0" cy="24" r="3" fill="#ffd700" />
+            </g>
+          </svg>
+        </div>
+
+        <p class="hint-text">Click on the Mala or press <strong>SPACEBAR</strong> to count</p>
+        <button class="reset-btn" onclick="resetJap()">Reset Counter</button>
       </div>
     </div>
 
-    <div class="chat-messages" id="chatMessages">
-      <div class="message-row assistant">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWCNZpuQTOcutmN-KQ5-bPFGujKHGQmosWX3izwLycdggSLeFtWIrWj9o&s=10" class="bot-avatar" alt="Bot Avatar" />
-        <div class="message">राधे-राधे, Ask your queries to Shri Premand Ji Maharaj!</div>
+    <!-- Tab 3: Prem Vani -->
+    <div id="vaniTab" class="tab-content">
+      <div class="vanis-container">
+        <div class="vanis-header">
+          <h3>प्रेम वाणी एवं नाम संकीर्तन</h3>
+          <p>श्री राधा नाम का पावन संकीर्तन श्रवण करें</p>
+        </div>
+
+        <div class="jaap-grid">
+          <!-- Radha Jaap Audio Card -->
+          <div class="jaap-card">
+            <div class="jaap-info">
+              <div class="jaap-icon-wrapper">🌸</div>
+              <div class="jaap-details">
+                <h4>राधा नाम जाप (Radha Jaap)</h4>
+                <p>निरंतर नाम रटन भाव</p>
+                <div class="playing-waves" id="playingWaves">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Play / Pause Button -->
+            <button class="play-btn" id="radhaPlayBtn" onclick="toggleRadhaAudio()" title="Play / Pause">
+              &#9654;
+            </button>
+          </div>
+
+          <!-- Coming Soon Options -->
+          <div class="coming-soon-card">
+            ✨ अन्य नाम जाप एवं वाणी जल्द ही उपलब्ध होंगे (Other Jaap Options Coming Soon)
+          </div>
+        </div>
+
+        <!-- Embedded Audio Element (SET YOUR FILE PATH HERE) -->
+        <audio id="radhaAudio" src="vani.mp3" preload="metadata"></audio>
       </div>
     </div>
 
-    <form class="chat-input-area" id="chatForm">
-      <input 
-        type="text" 
-        id="userInput" 
-        placeholder="प्रश्न पूछें..." 
-        autocomplete="off"
-        required
-      />
-      <button type="submit" id="sendBtn">Send</button>
-    </form>
   </div>
 
+  <!-- Global Footer Disclaimer -->
+  <footer class="disclaimer">
+    Disclaimer: AI may sometimes be wrong. This is not official Keli Kunj app, It is made just out of devotion for Shri Premanand ji Maharaj.
+  </footer>
+
   <script>
+    // Tab Switching Logic
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+    }
+
+    // Generate 108 Visible Beads dynamically in a 360 Degree Circle
+    const beadsGroup = document.getElementById('beadsGroup');
+    const totalBeads = 108;
+    const radius = 162;
+    const centerX = 200;
+    const centerY = 200;
+
+    for (let i = 0; i < totalBeads; i++) {
+      const angle = (i * (360 / totalBeads) - 90) * (Math.PI / 180);
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", x);
+      circle.setAttribute("cy", y);
+      circle.setAttribute("r", "4.6");
+      circle.setAttribute("fill", "url(#rudrakshaGrad)");
+      circle.setAttribute("stroke", "#ffb74d");
+      circle.setAttribute("stroke-width", "0.6");
+      
+      beadsGroup.appendChild(circle);
+    }
+
+    // Naam Jap State
+    let beads = 0;
+    let malas = 0;
+    let rotationAngle = 0;
+
+    function incrementJap() {
+      beads++;
+      rotationAngle += (360 / totalBeads);
+      
+      if (beads >= 108) {
+        beads = 0;
+        malas++;
+      }
+      
+      updateJapUI();
+    }
+
+    function resetJap() {
+      beads = 0;
+      malas = 0;
+      rotationAngle = 0;
+      updateJapUI();
+    }
+
+    function updateJapUI() {
+      document.getElementById('beadCount').textContent = beads;
+      document.getElementById('malaCount').textContent = malas;
+      document.getElementById('malaSvg').style.transform = `rotate(${rotationAngle}deg)`;
+    }
+
+    // Spacebar keypress trigger for Jap
+    window.addEventListener('keydown', (e) => {
+      const isJapTabActive = document.getElementById('japTab').classList.contains('active');
+      if (e.code === 'Space' && isJapTabActive && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        incrementJap();
+      }
+    });
+
+    // Audio Player Handler (Prem Vani)
+    const radhaAudio = document.getElementById('radhaAudio');
+    const radhaPlayBtn = document.getElementById('radhaPlayBtn');
+    const playingWaves = document.getElementById('playingWaves');
+
+    function toggleRadhaAudio() {
+      if (radhaAudio.paused) {
+        radhaAudio.play();
+        radhaPlayBtn.innerHTML = "&#10074;&#10074;"; // Pause symbol
+        radhaPlayBtn.classList.add('playing');
+        playingWaves.classList.add('active');
+      } else {
+        radhaAudio.pause();
+        radhaPlayBtn.innerHTML = "&#9654;"; // Play symbol
+        radhaPlayBtn.classList.remove('playing');
+        playingWaves.classList.remove('active');
+      }
+    }
+
+    radhaAudio.addEventListener('ended', () => {
+      radhaPlayBtn.innerHTML = "&#9654;";
+      radhaPlayBtn.classList.remove('playing');
+      playingWaves.classList.remove('active');
+    });
+
+    // Chat API Handler
     const API_URL = "http://127.0.0.1:8000/chat";
     const AVATAR_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWCNZpuQTOcutmN-KQ5-bPFGujKHGQmosWX3izwLycdggSLeFtWIrWj9o&s=10";
 
