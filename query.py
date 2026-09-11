@@ -3,15 +3,16 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
 from google import genai
 from google.genai import types
-from fastapi.middleware.cors import CORSMiddleware
 
 # ------------------------------------------------------------------------------
-# Load Environment Variables from .env file
+# Environment Variables & Initialization
 # ------------------------------------------------------------------------------
 load_dotenv()
 
@@ -23,7 +24,7 @@ resources = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure mandatory credentials are present
+    # Ensure required configuration is available
     if not PINECONE_API_KEY or not GEMINI_API_KEY:
         raise RuntimeError("Missing required API keys in environment/.env configuration.")
 
@@ -31,7 +32,7 @@ async def lifespan(app: FastAPI):
     print("Loading embedding model...")
     resources["embed_model"] = SentenceTransformer("intfloat/multilingual-e5-small")
 
-    # 2. Initialize Pinecone Client
+    # 2. Initialize Pinecone Vector Database
     print("Connecting to Pinecone...")
     pc = Pinecone(api_key=PINECONE_API_KEY)
     resources["pinecone_index"] = pc.index(INDEX_NAME)
@@ -43,20 +44,44 @@ async def lifespan(app: FastAPI):
     yield
     resources.clear()
 
-app = FastAPI(title="Hindi RAG Search API", lifespan=lifespan)
+app = FastAPI(title="Shri Premanand Ji Maharaj Chat AI & Audio Server", lifespan=lifespan)
+
+# Enable CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # Allows requests from any origin/domain
-    allow_credentials=False,    # MUST be False when using wildcard "*" origins
-    allow_methods=["*"],        # Allows all HTTP methods (POST, GET, etc.)
-    allow_headers=["*"],        # Allows all request headers
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ------------------------------------------------------------------------------
-# Pydantic Schemas for Structured Response
+# Static File Routes (HTML Frontend & MP3 Audio Stream)
+# ------------------------------------------------------------------------------
+@app.get("/", include_in_schema=False)
+async def serve_index():
+    if not os.path.exists("index.html"):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="index.html file not found on server."
+        )
+    return FileResponse("index.html", media_type="text/html")
+
+@app.get("/vani.mp3", include_in_schema=False)
+async def serve_vani_audio():
+    audio_path = "vani.mp3"
+    if not os.path.exists(audio_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="vani.mp3 file not found on server."
+        )
+    return FileResponse(audio_path, media_type="audio/mpeg")
+
+# ------------------------------------------------------------------------------
+# Data Models for RAG Chat
 # ------------------------------------------------------------------------------
 class ChatRequest(BaseModel):
-    query: str = Field(..., example="What is the key information?")
+    query: str = Field(..., example="नाम जप का क्या महत्व है?")
     top_k: Optional[int] = Field(default=3, ge=1, le=10)
 
 class ChunkResult(BaseModel):
@@ -73,13 +98,9 @@ class ChatResponse(BaseModel):
     retrieved_chunks: List[ChunkResult]
 
 # ------------------------------------------------------------------------------
-# Helper Function for Query Translation
+# Helper Utilities
 # ------------------------------------------------------------------------------
 def translate_query_to_hindi(client: genai.Client, query: str) -> str:
-    """Translates non-Hindi/English input to Hindi.
-
-    If the query is already in Hindi, returns it unchanged.
-    """
     translation_prompt = (
         "Translate the following user input into clear, natural Hindi if it is in English "
         "or any other language. If the input is already written in Hindi script (Devanagari), "
@@ -98,7 +119,7 @@ def translate_query_to_hindi(client: genai.Client, query: str) -> str:
     return response.text.strip()
 
 # ------------------------------------------------------------------------------
-# RAG Endpoint
+# RAG Search API Endpoint
 # ------------------------------------------------------------------------------
 @app.post("/chat", response_model=ChatResponse, status_code=status.HTTP_200_OK)
 async def chat_search(payload: ChatRequest):
@@ -113,14 +134,14 @@ async def chat_search(payload: ChatRequest):
         pinecone_index = resources["pinecone_index"]
         gemini_client = resources["gemini_client"]
 
-        # Step 1: Pre-process and Translate Query to Hindi if necessary
+        # Step 1: Query Pre-processing & Translation
         hindi_search_query = translate_query_to_hindi(gemini_client, payload.query)
 
-        # Step 2: Embed Hindi query string (with E5 model required prefix)
+        # Step 2: Generate Vector Embeddings
         formatted_query = f"query: {hindi_search_query}"
         query_vector = embed_model.encode(formatted_query).tolist()
 
-        # Step 3: Retrieve top-k relevant chunks from Pinecone
+        # Step 3: Query Pinecone Vector Index
         pinecone_response = pinecone_index.query(
             vector=query_vector,
             top_k=payload.top_k,
@@ -129,7 +150,6 @@ async def chat_search(payload: ChatRequest):
 
         matches = pinecone_response.get("matches", [])
 
-        # Parse retrieved chunks into structured output models
         retrieved_chunks = [
             ChunkResult(
                 id=match["id"],
@@ -149,12 +169,12 @@ async def chat_search(payload: ChatRequest):
                 retrieved_chunks=[]
             )
 
-        # Step 4: Combine retrieved context text blocks
+        # Step 4: Combine Context Chunks
         context_text = "\n\n".join(
             [f"--- Context {i+1} ---\n{chunk.text}" for i, chunk in enumerate(retrieved_chunks)]
         )
 
-        # Step 5: Construct RAG Prompt for Gemini
+        # Step 5: Construct System Instruction Prompt
         system_instruction = (
             "your name is Premand Ji Maharaj and you are a radha Krishna bhakt , brahmachari, and a spiritual guide. "
             "you have to instruct the user, by answering their queries related to bhagwat, "
@@ -172,7 +192,7 @@ async def chat_search(payload: ChatRequest):
 उत्तर (Hindi):
 """
 
-        # Step 6: Generate final spiritual response using Gemini
+        # Step 6: Generate Spiritual Response
         response = gemini_client.models.generate_content(
             model="gemini-3.1-flash-lite",
             contents=user_prompt,
